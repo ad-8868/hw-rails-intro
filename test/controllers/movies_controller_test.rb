@@ -35,6 +35,32 @@ class MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#ratings_R[checked]"
   end
 
+  test "should sort movies by title and keep the selected ratings" do
+    get movies_url, params: { ratings: { "G" => "1", "R" => "1" }, sort_by: "title" }
+
+    assert_response :success
+    assert_select "#movies tbody tr:first-child#movie_#{movies(:one).id}"
+    assert_select "select#sort_by option[value='title'][selected]"
+    assert_select "input#ratings_G[checked]"
+    assert_select "input#ratings_R[checked]"
+    assert_select "form#ratings_form[method=get]"
+  end
+
+  test "should sort movies by release date" do
+    get movies_url, params: { sort_by: "release_date" }
+
+    assert_response :success
+    assert_select "#movies tbody tr:first-child#movie_#{movies(:two).id}"
+    assert_select "select#sort_by option[value='release_date'][selected]"
+  end
+
+  test "should ignore unsupported sort columns" do
+    get movies_url, params: { sort_by: "description" }
+
+    assert_response :success
+    assert_select "select#sort_by option[value='title'][selected]"
+  end
+
   test "should get new" do
     get new_movie_url
     assert_response :success

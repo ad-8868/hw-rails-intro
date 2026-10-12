@@ -13,16 +13,40 @@
       <%= label_tag "ratings[#{rating}]", rating, class: 'form-check-label' %>
     </div>
   <% end %>
+  <div>
+    <label class="form-label me-2" for="sort_by">Sort by:</label>
+    <%= select_tag :sort_by,
+                   options_for_select([["Title", "title"],
+                                       ["Release Date", "release_date"]],
+                                       @sort_by),
+                   id:    "sort_by",
+                   class: "form-select d-inline w-auto" %>
+  </div>
   <%= submit_tag 'Refresh', id: 'ratings_submit', class: 'btn btn-primary' %>
 <% end %>
 
+<% ratings_params = @ratings_to_show.index_with { "1" } %>
 <div id="movies">
-  <% @movies.each do |movie| %>
-    <%= render movie %>
-    <p>
-      <%= link_to "Show this movie", movie %>
-    </p>
-  <% end %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th><%= link_to "Title", movies_path(sort_by: "title", ratings: ratings_params) %></th>
+        <th>Rating</th>
+        <th>Description</th>
+        <th><%= link_to "Release Date", movies_path(sort_by: "release_date", ratings: ratings_params) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @movies.each do |movie| %>
+        <tr id="<%= dom_id(movie) %>">
+          <td><%= link_to movie.title, movie %></td>
+          <td><%= movie.rating %></td>
+          <td><%= movie.description %></td>
+          <td><%= movie.release_date %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 <%= link_to "New movie", new_movie_path %>
