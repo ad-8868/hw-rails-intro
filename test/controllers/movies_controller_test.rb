@@ -8,6 +8,31 @@ class MoviesControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get movies_url
     assert_response :success
+    assert_select "form#ratings_form"
+    assert_select "input#ratings_G[checked]"
+    assert_select "input#ratings_PG[checked]"
+    assert_select "input#ratings_PG-13[checked]"
+    assert_select "input#ratings_R[checked]"
+  end
+
+  test "should filter movies by selected rating" do
+    get movies_url, params: { ratings: { "G" => "1" } }
+
+    assert_response :success
+    assert_select "#movie_#{movies(:one).id}"
+    assert_select "#movie_#{movies(:two).id}", false
+    assert_select "input#ratings_G[checked]"
+    assert_select "input#ratings_R:not([checked])"
+  end
+
+  test "should show all movies and check all ratings when no ratings are selected" do
+    get movies_url, params: { ratings: {} }
+
+    assert_response :success
+    assert_select "#movie_#{movies(:one).id}"
+    assert_select "#movie_#{movies(:two).id}"
+    assert_select "input#ratings_G[checked]"
+    assert_select "input#ratings_R[checked]"
   end
 
   test "should get new" do
