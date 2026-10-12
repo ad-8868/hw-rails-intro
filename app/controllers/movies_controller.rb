@@ -4,8 +4,18 @@ class MoviesController < ApplicationController
   # GET /movies or /movies.json
   def index
     @all_ratings = Movie.all_ratings
-    @ratings_to_show = params[:ratings].present? ? params[:ratings].keys : @all_ratings
-    @sort_by = %w[title release_date].include?(params[:sort_by]) ? params[:sort_by] : "title"
+
+    if params.key?(:ratings) || params.key?(:sort_by)
+      @ratings_to_show = params[:ratings].present? ? params[:ratings].keys & @all_ratings : @all_ratings
+      @sort_by = %w[title release_date].include?(params[:sort_by]) ? params[:sort_by] : "title"
+      session[:ratings_to_show] = @ratings_to_show
+      session[:sort_by] = @sort_by
+    else
+      @ratings_to_show = Array(session[:ratings_to_show]) & @all_ratings
+      @ratings_to_show = @all_ratings if @ratings_to_show.empty?
+      @sort_by = %w[title release_date].include?(session[:sort_by]) ? session[:sort_by] : "title"
+    end
+
     @movies = Movie.with_ratings(@ratings_to_show).order(@sort_by)
   end
 

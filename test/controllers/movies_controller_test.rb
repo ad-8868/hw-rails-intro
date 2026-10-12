@@ -39,7 +39,7 @@ class MoviesControllerTest < ActionDispatch::IntegrationTest
     get movies_url, params: { ratings: { "G" => "1", "R" => "1" }, sort_by: "title" }
 
     assert_response :success
-    assert_select "#movies tbody tr:first-child#movie_#{movies(:one).id}"
+    assert_select "#movies > div:first-child#movie_#{movies(:one).id}"
     assert_select "select#sort_by option[value='title'][selected]"
     assert_select "input#ratings_G[checked]"
     assert_select "input#ratings_R[checked]"
@@ -50,7 +50,7 @@ class MoviesControllerTest < ActionDispatch::IntegrationTest
     get movies_url, params: { sort_by: "release_date" }
 
     assert_response :success
-    assert_select "#movies tbody tr:first-child#movie_#{movies(:two).id}"
+    assert_select "#movies > div:first-child#movie_#{movies(:two).id}"
     assert_select "select#sort_by option[value='release_date'][selected]"
   end
 
@@ -59,6 +59,41 @@ class MoviesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "select#sort_by option[value='title'][selected]"
+  end
+
+  test "should remember sorting and ratings after visiting a movie" do
+    get movies_url, params: { ratings: { "G" => "1", "R" => "1" }, sort_by: "release_date" }
+    get movie_url(movies(:one))
+    get movies_url
+
+    assert_response :success
+    assert_select "select#sort_by option[value='release_date'][selected]"
+    assert_select "input#ratings_G[checked]"
+    assert_select "input#ratings_R[checked]"
+    assert_select "#movies > div:first-child#movie_#{movies(:two).id}"
+  end
+
+  test "should update remembered sorting and ratings from new settings" do
+    get movies_url, params: { ratings: { "G" => "1" }, sort_by: "release_date" }
+    get movies_url, params: { ratings: { "R" => "1" }, sort_by: "title" }
+    get movies_url
+
+    assert_response :success
+    assert_select "select#sort_by option[value='title'][selected]"
+    assert_select "input#ratings_G:not([checked])"
+    assert_select "input#ratings_R[checked]"
+    assert_select "#movie_#{movies(:one).id}", false
+    assert_select "#movie_#{movies(:two).id}"
+  end
+
+  test "should show all ratings when no rating checkboxes are submitted" do
+    get movies_url, params: { sort_by: "release_date" }
+
+    assert_response :success
+    assert_select "input#ratings_G[checked]"
+    assert_select "input#ratings_R[checked]"
+    assert_select "#movie_#{movies(:one).id}"
+    assert_select "#movie_#{movies(:two).id}"
   end
 
   test "should get new" do
